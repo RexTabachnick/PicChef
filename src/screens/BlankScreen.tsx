@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import axios from 'axios';
 import RNFS from 'react-native-fs';
-//import firestore from '@react-native-firebase/firestore';  // Correct import
+import { writeToDatabase } from '../utils/firebase';
 
 const BlankScreen = () => {
   const [cameraPermission, setCameraPermission] = useState<string | null>(null);
@@ -18,24 +18,6 @@ const BlankScreen = () => {
     };
     requestPermission();
   }, []);
-
-//   const saveIngredientsToFirebase = async (ingredients: { item: string; weight: string }[]) => {
-//     try {
-//       const ingredientsRef = firestore().collection('ingredients');  // This collection will be created if it doesn't exist
-  
-//       ingredients.forEach(async (ingredient) => {
-//         await ingredientsRef.add({
-//           item: ingredient.item,
-//           weight: ingredient.weight,
-//           timestamp: firestore.FieldValue.serverTimestamp(),  // Add timestamp
-//         });
-//       });
-  
-//       console.log('Ingredients saved to Firestore!');
-//     } catch (error) {
-//       console.error('Error saving ingredients to Firestore:', error);
-//     }
-//   };
   
 
   const analyzeImage = async (imagePath: string) => {
@@ -89,7 +71,20 @@ const BlankScreen = () => {
 
       console.log('Parsed Ingredients:', parsedIngredients);
 
-      if (parsedIngredients.length) {
+      if (parsedIngredients.length) { // if parsedIngredients has at least 1 element
+        // Save each ingredient to Firebase
+        parsedIngredients.forEach(async (ingredient) => {
+          try {
+            await writeToDatabase(`ingredients/${ingredient.item}`, {
+              type: ingredient.item,
+              weight: ingredient.weight,
+            });
+            console.log(`Saved ${ingredient.item} to Firebase.`);
+          } catch (err) {
+            console.error(`Error saving ${ingredient.item} to Firebase:`, err);
+          }
+        });
+  
         Alert.alert(
           'Ingredients Detected',
           parsedIngredients.map((ingredient) => `${ingredient.item}: ${ingredient.weight}`).join('\n')
