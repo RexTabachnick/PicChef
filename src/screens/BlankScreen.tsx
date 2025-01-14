@@ -4,12 +4,19 @@ import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import axios from 'axios';
 import RNFS from 'react-native-fs';
 import { writeToDatabase } from '../utils/firebase';
+import { useNavigation } from '@react-navigation/native';
 
 const BlankScreen = () => {
   const [cameraPermission, setCameraPermission] = useState<string | null>(null);
   const devices = useCameraDevices();
   const device = devices?.find((device) => device.position === 'back');
   const cameraRef = useRef<Camera>(null);
+
+  type NavigationProp = {
+    navigate: (screen: 'Ingredients' | 'Blank' | 'Home') => void; // Add all valid screen names
+  };
+
+  const navigation = useNavigation<NavigationProp>(); // Get the navigation object
 
   useEffect(() => {
     const requestPermission = async () => {
@@ -71,7 +78,8 @@ const BlankScreen = () => {
 
       console.log('Parsed Ingredients:', parsedIngredients);
 
-      if (parsedIngredients.length) { // if parsedIngredients has at least 1 element
+      if (parsedIngredients.length) 
+        { // if parsedIngredients has at least 1 element
         // Save each ingredient to Firebase
         parsedIngredients.forEach(async (ingredient) => {
           try {
@@ -84,14 +92,11 @@ const BlankScreen = () => {
             console.error(`Error saving ${ingredient.item} to Firebase:`, err);
           }
         });
-  
-        Alert.alert(
-          'Ingredients Detected',
-          parsedIngredients.map((ingredient) => `${ingredient.item}: ${ingredient.weight}`).join('\n')
-        );
-      } else {
-        Alert.alert('No ingredients detected', 'The AI could not find ingredients in the expected format.');
-      }
+        } 
+        else 
+          {
+            Alert.alert('No ingredients detected', 'The AI could not find ingredients in the expected format.');
+          }
     } catch (error) {
       console.error('Error analyzing image:', error);
       Alert.alert('Error', 'Failed to analyze the image. Please check the API.');
@@ -120,6 +125,10 @@ const BlankScreen = () => {
       console.error('Error taking photo:', error);
       Alert.alert('Error', 'Failed to take photo.');
     }
+  };
+
+  const navigateToIngredients = () => {
+    navigation.navigate('Ingredients'); // Navigate to Ingredients Screen
   };
 
   if (cameraPermission === null) {
@@ -154,12 +163,17 @@ const BlankScreen = () => {
           style={StyleSheet.absoluteFill}
           device={device}
           isActive={true}
-          photo={true} // Enable photo capture mode
+          photo={true}
         />
       )}
-      <TouchableOpacity style={styles.button} onPress={takePhoto}>
-        <Text style={styles.buttonText}>Take Photo</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={takePhoto}>
+          <Text style={styles.buttonText}>Take Photo</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={navigateToIngredients}>
+          <Text style={styles.buttonText}>Finish Capturing</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -167,7 +181,7 @@ const BlankScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-end', // Ensures buttons stay at the bottom
     alignItems: 'center',
     backgroundColor: '#000',
   },
@@ -175,19 +189,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'white',
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    padding: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Semi-transparent background
+  },
   button: {
-    position: 'absolute',
-    bottom: 50,
+    flex: 1,
+    marginHorizontal: 10,
+    padding: 12,
     backgroundColor: 'tomato',
-    padding: 15,
-    borderRadius: 10,
+    borderRadius: 8,
+    alignItems: 'center',
   },
   buttonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
   },
 });
-
 export default BlankScreen;
 

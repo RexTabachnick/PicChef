@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors } from '../utils/styles';
 
 const HomeScreen = () => {
   return (
@@ -14,11 +15,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   welcomeText: {
     color: 'purple', // Sets the text color to purple
-    fontSize: 24, // Optional: Adjust the font size as needed
+    fontSize: 25, // Optional: Adjust the font size as needed
   },
 });
 
